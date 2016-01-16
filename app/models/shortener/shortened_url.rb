@@ -3,7 +3,7 @@ class Shortener::ShortenedUrl < ActiveRecord::Base
   URL_PROTOCOL_HTTP = "http://"
   REGEX_LINK_HAS_PROTOCOL = Regexp.new('\Ahttp:\/\/|\Ahttps:\/\/', Regexp::IGNORECASE)
 
-  attr_accessible :url
+  # attr_accessible :url
   validates :url, :presence => true
   validate :bad_uri
 
@@ -55,7 +55,7 @@ class Shortener::ShortenedUrl < ActiveRecord::Base
 
     begin
       args[:url] = clean_url(args[:url])
-      return scope.where(args).first_or_initialize
+      return scope.where(args).first_or_create_object(args)
     rescue URI::InvalidURIError
       return scope.new(args)
     end
@@ -130,18 +130,24 @@ class Shortener::ShortenedUrl < ActiveRecord::Base
 
   private
 
+  def self.first_or_create_object(attributes = nil, &block) # :nodoc:
+    first || create_object(attributes, &block)
+  end
+
   # we'll rely on the DB to make sure the unique key is really unique.
   # if it isn't unique, the unique index will catch this and raise an error
-  def create
+  def self.create_object(attributes, &block)
     count = 0
-    self.unique_key ||= generate_unique_key
+    object = new(attributes, &block)
+    object.unique_key ||= generate_unique_key
     begin
-      super
+      object.save
+      object
     rescue ActiveRecord::RecordNotUnique, ActiveRecord::StatementInvalid => err
       if (count +=1) < 5
         logger.info("  #{err}")
         logger.info("  Retrying with different unique key")
-        self.unique_key = generate_unique_key
+        object.unique_key = generate_unique_key
         retry
       else
         logger.info("  Too many retries, giving up")
@@ -152,7 +158,7 @@ class Shortener::ShortenedUrl < ActiveRecord::Base
 
   # generate a random string
   # future mod to allow specifying a more expansive charst, like utf-8 chinese
-  def generate_unique_key
+  def self.generate_unique_key
     # not doing uppercase as url is case insensitive
     charset = ::Shortener.key_chars
     (0...::Shortener.unique_key_length).map{ charset[rand(charset.size)] }.join

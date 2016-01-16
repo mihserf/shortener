@@ -15,7 +15,7 @@ module Shortener
 
   include ActiveSupport::Configurable
   config_accessor :unique_key_length, :charset, :url_prefix, :tracking,
-                  :tracking_with_new_thread
+                  :tracking_with_new_thread, :short_host_name, :main_url
 
   # default key length: 5 characters
   self.unique_key_length = 5
@@ -36,7 +36,7 @@ module Shortener
     @match_url ||= Regexp.new "^#{clean_url_prefix}(#{key_regex})/?$"
   end
 
-  # no tracking on default
+  # tracking on default
   self.tracking = true
   self.tracking_with_new_thread = true
 

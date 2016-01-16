@@ -11,7 +11,11 @@ Shortener.configure do |config|
   # Matching url prefix
   config.match_url = <%= Shortener.match_url.inspect %>
 
-  # No tracking on default
+  # Tracking is on by default
   config.tracking = <%= Shortener.tracking %>
   config.tracking_with_new_thread = <%= Shortener.tracking_with_new_thread %>
+
+  # Un-shortening within other hostname (short one)
+  #config.short_host_name = ENV['SHORT_DOMAIN_NAME']
+  #config.main_url = "http://#{ENV['DOMAIN_NAME']}" # redirect here if shortened url wasn't found
 end
