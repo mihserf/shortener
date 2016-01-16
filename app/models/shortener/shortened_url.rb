@@ -9,10 +9,6 @@ class Shortener::ShortenedUrl < ActiveRecord::Base
 
   # allows the shortened link to be associated with a user
   belongs_to :owner, :polymorphic => true
-
-  # allows the shortened link to be associated with an item it's related to
-  belongs_to :item, :polymorphic => true
-
   has_many :shortened_clicks, :class_name=>'Shortener::ShortenedClick', dependent: :destroy
 
   def bad_uri
