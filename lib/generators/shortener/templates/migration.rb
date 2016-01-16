@@ -8,6 +8,7 @@ class CreateShortenerTable < ActiveRecord::Migration
       # we can link this to shortened object
       t.integer :item_id
       t.string :item_type, :limit => 40
+      t.boolean :special, default: false
 
       # the real url that we will redirect to
       t.string :url, :null => false
@@ -26,7 +27,7 @@ class CreateShortenerTable < ActiveRecord::Migration
     add_index :shortener_shortened_urls, :unique_key, :unique => true
     add_index :shortener_shortened_urls, :url
     add_index :shortener_shortened_urls, [:owner_id, :owner_type]
-    add_index :shortener_shortened_urls, [:item_id, :item_type]
+    add_index :shortener_shortened_urls, [:item_id, :item_type, :special], name: 'index_shortener_shortened_urls_on_special_item'
 
     # tracking info
     create_table :shortener_shortened_clicks do |t|
