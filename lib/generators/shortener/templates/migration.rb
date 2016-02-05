@@ -27,7 +27,7 @@ class CreateShortenerTable < ActiveRecord::Migration
     create_table :shortener_shortened_clicks do |t|
       t.integer :shortened_url_id
       t.string :remote_ip
-      t.string :referer
+      t.text :referer
       t.text :agent
       t.string :country
       t.string :browser
