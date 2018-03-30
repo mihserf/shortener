@@ -27,14 +27,14 @@ class ShortenerRedirectMiddleware
   def handle_short_url(env, redirect_to_root=false)
     if (env["PATH_INFO"] =~ ::Shortener.match_url) && (shortener = ::Shortener::ShortenedUrl.find_by_unique_key($1))
       shortener.track env if ::Shortener.tracking
-      [301, {'Location' => location_with_merged_params(shortener.url)}, []]
+      [301, {'Location' => location_with_merged_params(env, shortener.url)}, []]
     else
       location = ::Shortener.main_url.present? ? ::Shortener.main_url : '/'
-      redirect_to_root ? [301, {'Location' => location_with_merged_params(location), 'Content-Type' => 'text/html', 'Content-Length' => '0'}, []] : @app.call(env)
+      redirect_to_root ? [301, {'Location' => location_with_merged_params(env, location), 'Content-Type' => 'text/html', 'Content-Length' => '0'}, []] : @app.call(env)
     end
   end
 
-  def location_with_merged_params(location)
+  def location_with_merged_params(env, location)
     uri = URI::parse(env['REQUEST_URI'])
     return location if uri.query.blank?
 
