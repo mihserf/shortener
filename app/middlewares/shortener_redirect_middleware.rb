@@ -27,10 +27,24 @@ class ShortenerRedirectMiddleware
   def handle_short_url(env, redirect_to_root=false)
     if (env["PATH_INFO"] =~ ::Shortener.match_url) && (shortener = ::Shortener::ShortenedUrl.find_by_unique_key($1))
       shortener.track env if ::Shortener.tracking
-      [301, {'Location' => shortener.url}, []]
+      [301, {'Location' => location_with_merged_params(shortener.url)}, []]
     else
       location = ::Shortener.main_url.present? ? ::Shortener.main_url : '/'
-      redirect_to_root ? [301, {'Location' => location, 'Content-Type' => 'text/html', 'Content-Length' => '0'}, []] : @app.call(env)
+      redirect_to_root ? [301, {'Location' => location_with_merged_params(location), 'Content-Type' => 'text/html', 'Content-Length' => '0'}, []] : @app.call(env)
     end
   end
+
+  def location_with_merged_params(location)
+    uri = URI::parse(env['REQUEST_URI'])
+    return location if uri.query.blank?
+
+    params = Rack::Utils.parse_nested_query(uri.query)
+    uri2 = URI::parse(location)
+    params2 = Rack::Utils.parse_nested_query(uri2.query)
+    params2.merge!(params)
+    query = Rack::Utils.build_query(params2)
+    location_without_params = location.split('?')[0]
+    [location_without_params, query].join('?')
+  end
+
 end
